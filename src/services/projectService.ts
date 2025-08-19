@@ -66,8 +66,8 @@ const mockProjects: Project[] = [
   }
 ];
 
-// API Key for OpenAI (this is a placeholder - user will replace)
-const OPENAI_API_KEY = 'EXAMPLE_OPENAI_API_KEY';
+// Note: Feature extraction can be enhanced with AI services like OpenAI
+// This would require adding an API key to the apiConfig
 
 export const projectService = {
   getProjects: async (): Promise<Project[]> => {
@@ -87,14 +87,25 @@ export const projectService = {
     await new Promise(resolve => setTimeout(resolve, 1200));
     
     // Extract features using mock NLP
-    const features = await projectService.extractFeatures(description);
+    const featureDefinitions = await projectService.extractFeatures(description);
+    
+    // Generate resources for each feature (in parallel)
+    const featuresWithResources = await Promise.all(
+      featureDefinitions.map(async (feature) => {
+        const resources = await projectService.generateResourcesForFeature(feature.name.toLowerCase());
+        return {
+          ...feature,
+          resources
+        };
+      })
+    );
     
     const newProject: Project = {
       id: (mockProjects.length + 1).toString(),
       name,
       description,
       createdAt: new Date().toISOString(),
-      features
+      features: featuresWithResources
     };
     
     // In a real implementation, we would save this to a database
@@ -103,8 +114,8 @@ export const projectService = {
     return newProject;
   },
   
-  // Mock feature extraction (simulating OpenAI API call)
-  extractFeatures: async (description: string): Promise<Feature[]> => {
+  // Feature extraction (simulating OpenAI API call)
+  extractFeatures: async (description: string): Promise<Omit<Feature, 'resources'>[]> => {
     // In a real implementation, this would call OpenAI API
     await new Promise(resolve => setTimeout(resolve, 1500));
     
@@ -118,51 +129,86 @@ export const projectService = {
       'ui': ['ui', 'interface', 'design', 'layout'],
       'api': ['api', 'endpoint', 'rest', 'graphql'],
       'hosting': ['hosting', 'deploy', 'server'],
+      'testing': ['test', 'testing', 'unit test', 'integration test'],
+      'frontend': ['frontend', 'react', 'vue', 'angular', 'ui'],
+      'backend': ['backend', 'server', 'api', 'database'],
+      'mobile': ['mobile', 'ios', 'android', 'react native', 'flutter'],
     };
     
     // Match keywords to features
-    const matchedFeatures = new Set<string>();
+    // Define the type for feature names to match the keys in featureMap
+    type FeatureName = 'authentication' | 'database' | 'ui' | 'api' | 'hosting' | 'testing' | 'frontend' | 'backend' | 'mobile';
+    const matchedFeatures = new Set<FeatureName>();
     
     for (const [feature, terms] of Object.entries(featureMap)) {
       if (terms.some(term => keywords.includes(term)) || 
           description.toLowerCase().includes(feature)) {
-        matchedFeatures.add(feature);
+        matchedFeatures.add(feature as FeatureName);
       }
     }
     
-    // Generate resources for each feature
-    const features: Feature[] = Array.from(matchedFeatures).map((name, index) => {
+    // If no features matched, add some default ones
+    if (matchedFeatures.size === 0) {
+      matchedFeatures.add('frontend' as FeatureName);
+      matchedFeatures.add('backend' as FeatureName);
+    }
+    
+    // Create feature definitions (without resources)
+    const features = Array.from(matchedFeatures).map((name, index) => {
       return {
         id: (index + 1).toString(),
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        resources: projectService.generateResourcesForFeature(name)
+        name: name.charAt(0).toUpperCase() + name.slice(1)
       };
     });
     
     return features;
   },
   
-  generateResourcesForFeature: (featureName: string): Resource[] => {
-    // This would be replaced with actual API calls to various sources
-    const resourceTypes = ['documentation', 'tutorial', 'repository', 'template'];
-    
-    // Generate 2-4 resources per feature
-    const count = 2 + Math.floor(Math.random() * 3);
-    const resources: Resource[] = [];
-    
-    for (let i = 0; i < count; i++) {
-      const type = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
+  generateResourcesForFeature: async (featureName: string): Promise<Resource[]> => {
+    try {
+      // Import the resourceService here to avoid circular dependencies
+      const { resourceService } = await import('./api/resourceService');
       
-      resources.push({
-        id: `${featureName}-${i}`,
-        title: `${featureName.charAt(0).toUpperCase() + featureName.slice(1)} ${type}`,
-        url: `https://example.com/${featureName}/${type}`,
-        type: type as 'documentation' | 'tutorial' | 'repository' | 'template',
-        status: 'unread'
-      });
+      // Get resources from various APIs
+      const resources = await resourceService.searchResourcesForFeature(featureName);
+      
+      // If no resources found, return some fallback resources
+      if (resources.length === 0) {
+        const resourceTypes = ['documentation', 'tutorial', 'repository', 'template'];
+        const fallbackResources: Resource[] = [];
+        
+        for (let i = 0; i < 3; i++) {
+          const type = resourceTypes[i % resourceTypes.length];
+          
+          fallbackResources.push({
+            id: `${featureName}-${i}`,
+            title: `${featureName.charAt(0).toUpperCase() + featureName.slice(1)} ${type}`,
+            url: `https://example.com/${featureName}/${type}`,
+            type: type as 'documentation' | 'tutorial' | 'repository' | 'template',
+            status: 'unread',
+            description: `This is a placeholder for ${featureName} ${type}. API keys need to be configured.`
+          });
+        }
+        
+        return fallbackResources;
+      }
+      
+      return resources;
+    } catch (error) {
+      console.error('Error generating resources for feature:', error);
+      
+      // Return fallback resources in case of error
+      return [
+        {
+          id: `${featureName}-fallback`,
+          title: `${featureName} Documentation`,
+          url: `https://example.com/${featureName}`,
+          type: 'documentation',
+          status: 'unread',
+          description: 'API error occurred. Please check your API configuration.'
+        }
+      ];
     }
-    
-    return resources;
   },
   
   updateResourceStatus: async (
@@ -197,11 +243,14 @@ export const projectService = {
     const project = mockProjects.find(p => p.id === projectId);
     if (!project) return null;
     
+    // Generate resources for the feature
+    const resources = await projectService.generateResourcesForFeature(name.toLowerCase());
+    
     // Create new feature
     const newFeature: Feature = {
       id: (project.features.length + 1).toString(),
       name,
-      resources: projectService.generateResourcesForFeature(name.toLowerCase())
+      resources
     };
     
     // Add to project
