@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
               from across the web, tailored to your specific project needs.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://github.com/Riddz04" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-5 w-5" />
               </a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
