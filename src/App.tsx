@@ -7,6 +7,7 @@ import SignupPage from './pages/auth/SignupPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProjectDetailPage from './pages/projects/ProjectDetailPage';
 import CreateProjectPage from './pages/projects/CreateProjectPage';
+import SearchPage from './pages/SearchPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Layout from './components/layout/Layout';
 
@@ -34,6 +35,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route 
               path="dashboard" 
               element={

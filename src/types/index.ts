@@ -33,4 +33,5 @@ export interface Project {
   description: string;
   createdAt: string;
   features: Feature[];
+  userId?: string;
 }
