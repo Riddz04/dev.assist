@@ -43,7 +43,7 @@ const Header: React.FC = () => {
               <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:bg-primary/30 transition-all" />
               <Code className="h-7 w-7 text-primary relative z-10" />
             </div>
-            <span className="text-xl font-bold gradient-text">
+            <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
               Dev.Assist
             </span>
           </Link>
@@ -134,7 +134,7 @@ const Header: React.FC = () => {
                   <div className="flex items-center justify-between p-4 border-b border-white/10">
                     <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
                       <Code className="h-6 w-6 text-primary" />
-                      <span className="text-lg font-bold gradient-text">Dev.Assist</span>
+                      <span className="text-lg font-bold text-primary">Dev.Assist</span>
                     </Link>
                   </div>
                   

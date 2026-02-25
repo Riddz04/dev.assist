@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
@@ -56,11 +57,24 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section with Dotted Glow Background */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 grid-pattern opacity-50" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-primary/10 blur-[100px] rounded-full" />
+        {/* Dotted Glow Background */}
+        <DottedGlowBackground
+          className="absolute inset-0 z-0"
+          opacity={0.8}
+          gap={16}
+          radius={2}
+          colorLightVar="--color-neutral-400"
+          glowColorLightVar="--color-neutral-500"
+          colorDarkVar="--color-neutral-400"
+          glowColorDarkVar="--color-teal-500"
+          backgroundOpacity={0.05}
+          speedMin={0.2}
+          speedMax={1.2}
+          speedScale={1}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background z-[1]" />
         
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-center space-y-8">
