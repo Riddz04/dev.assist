@@ -75,7 +75,7 @@ export const codeExampleService = {
         return projects;
       } catch (error) {
         console.warn('CodePen scraping failed, returning fallback results');
-        return codeExampleService.getFallbackCodePenResults(query, limit);
+        return codeExampleService.getFallbackCodePenResults(query);
       }
     }, 'CodePen');
   },
@@ -137,7 +137,7 @@ export const codeExampleService = {
         return projects;
       } catch (error) {
         console.warn('CodeSandbox API failed, returning fallback results');
-        return codeExampleService.getFallbackCodeSandboxResults(query, limit);
+        return codeExampleService.getFallbackCodeSandboxResults(query);
       }
     }, 'CodeSandbox');
   },
@@ -145,31 +145,19 @@ export const codeExampleService = {
   /**
    * Get fallback CodePen results when API fails
    */
-  getFallbackCodePenResults: (query: string, limit: number): CodePenProject[] => {
-    return Array.from({ length: limit }, (_, i) => ({
-      title: `${query} Example ${i + 1}`,
-      details: `Search for "${query}" on CodePen for live examples`,
-      link: `https://codepen.io/search/pens?q=${encodeURIComponent(query)}`,
-      views: '0',
-      likes: '0',
-      user: { username: 'search' }
-    }));
+  getFallbackCodePenResults: (query: string): CodePenProject[] => {
+    // Return empty array instead of fake results
+    console.warn(`CodePen API unavailable for "${query}". No valid resources found.`);
+    return [];
   },
 
   /**
    * Get fallback CodeSandbox results when API fails
    */
-  getFallbackCodeSandboxResults: (query: string, limit: number): CodeSandboxProject[] => {
-    return Array.from({ length: limit }, (_, i) => ({
-      title: `${query} Sandbox ${i + 1}`,
-      description: `Search for "${query}" on CodeSandbox`,
-      alias: '',
-      id: `fallback-${i}`,
-      screenshot_url: null,
-      view_count: 0,
-      like_count: 0,
-      author: null
-    }));
+  getFallbackCodeSandboxResults: (query: string): CodeSandboxProject[] => {
+    // Return empty array instead of fake results
+    console.warn(`CodeSandbox API unavailable for "${query}". No valid resources found.`);
+    return [];
   },
 
   /**
