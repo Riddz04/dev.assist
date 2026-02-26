@@ -18,6 +18,28 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['lucide-react'],
     },
+    server: {
+      proxy: {
+        // Proxy npm registry to avoid CORS
+        '/api/npm': {
+          target: 'https://registry.npmjs.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/npm/, '')
+        },
+        // Proxy MDN API to avoid CORS
+        '/api/mdn': {
+          target: 'https://developer.mozilla.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/mdn/, '')
+        },
+        // Proxy Dev.to API to avoid CORS
+        '/api/devto': {
+          target: 'https://dev.to',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/devto/, '')
+        }
+      }
+    },
     define: {
       // Make env variables available to the app
       __APP_ENV__: JSON.stringify(env),

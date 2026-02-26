@@ -3,7 +3,6 @@ import { githubService } from './githubService';
 import { gitlabService } from './gitlabService';
 import { youtubeService } from './youtubeService';
 import { stackoverflowService } from './stackoverflowService';
-import { googleSearchService } from './googleSearchService';
 import { redditService } from './redditService';
 import { devtoService } from './devtoService';
 import { mediumService } from './mediumService';
@@ -20,14 +19,13 @@ export const resourceService = {
     try {
       // Run searches independently so one failure doesn't block others
       const [
-        githubResult, gitlabResult, youtubeResult, stackoverflowResult, googleResult,
+        githubResult, gitlabResult, youtubeResult, stackoverflowResult,
         redditResult, devtoResult, mediumResult, mdnResult, npmResult
       ] = await Promise.allSettled([
         githubService.searchRepositories(featureName, limit),
         gitlabService.searchProjects(featureName, limit),
         youtubeService.searchVideos(`${featureName} tutorial`, limit),
         stackoverflowService.searchQuestions(featureName, limit),
-        googleSearchService.searchDocumentation(featureName, limit),
         redditService.searchPosts(`${featureName} programming`, limit),
         devtoService.searchArticles(featureName, limit),
         mediumService.searchPosts(featureName, limit),
@@ -40,7 +38,6 @@ export const resourceService = {
       const gitlabResults = gitlabResult.status === 'fulfilled' ? gitlabResult.value : [];
       const youtubeResults = youtubeResult.status === 'fulfilled' ? youtubeResult.value : [];
       const stackoverflowResults = stackoverflowResult.status === 'fulfilled' ? stackoverflowResult.value : [];
-      const googleResults = googleResult.status === 'fulfilled' ? googleResult.value : [];
       const redditResults = redditResult.status === 'fulfilled' ? redditResult.value : [];
       const devtoResults = devtoResult.status === 'fulfilled' ? devtoResult.value : [];
       const mediumResults = mediumResult.status === 'fulfilled' ? mediumResult.value : [];
@@ -48,8 +45,8 @@ export const resourceService = {
       const npmResults = npmResult.status === 'fulfilled' ? npmResult.value : [];
 
       // Log any failures
-      const results = [githubResult, gitlabResult, youtubeResult, stackoverflowResult, googleResult, redditResult, devtoResult, mediumResult, mdnResult, npmResult];
-      const serviceNames = ['GitHub', 'GitLab', 'YouTube', 'Stack Overflow', 'Google', 'Reddit', 'Dev.to', 'Medium', 'MDN', 'npm'];
+      const results = [githubResult, gitlabResult, youtubeResult, stackoverflowResult, redditResult, devtoResult, mediumResult, mdnResult, npmResult];
+      const serviceNames = ['GitHub', 'GitLab', 'YouTube', 'Stack Overflow', 'Reddit', 'Dev.to', 'Medium', 'MDN', 'npm'];
       results.forEach((r, i) => {
         if (r.status === 'rejected') {
           console.warn(`${serviceNames[i]} API failed:`, r.reason?.message || r.reason);
@@ -73,7 +70,6 @@ export const resourceService = {
         ...youtubeResults.map(video => youtubeService.formatVideoAsResource(video)),
         ...stackoverflowResults.map(question => stackoverflowService.formatQuestionAsResource(question)),
         ...mdnResults.map(doc => mdnService.formatDocumentAsResource(doc)),
-        ...googleResults.map(result => googleSearchService.formatSearchResultAsResource(result)),
         ...redditResults.map(post => redditService.formatPostAsResource(post)),
         ...devtoResults.map(article => devtoService.formatArticleAsResource(article)),
         ...mediumResults.map(post => mediumService.formatPostAsResource(post))

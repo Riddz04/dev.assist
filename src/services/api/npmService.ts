@@ -62,8 +62,8 @@ export const npmService = {
         throw new Error(`npm registry rate limit exceeded. Please wait ${waitTime} minutes.`);
       }
 
-      // npm Registry Search API
-      const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(query)}&size=${limit}&popularity=1&quality=1&maintenance=1`;
+      // npm Registry Search API via proxy to avoid CORS
+      const url = `/api/npm/-/v1/search?text=${encodeURIComponent(query)}&size=${limit}&popularity=1&quality=1&maintenance=1`;
       
       const response = await safeFetch(url, {
         headers: {
@@ -91,8 +91,8 @@ export const npmService = {
         throw new Error('npm registry rate limit exceeded. Please try again later.');
       }
 
-      // npm Registry API for specific package
-      const url = `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(packageName)}&size=1`;
+      // npm Registry API for specific package via proxy
+      const url = `/api/npm/-/v1/search?text=${encodeURIComponent(packageName)}&size=1`;
       
       const response = await safeFetch(url, {
         headers: {

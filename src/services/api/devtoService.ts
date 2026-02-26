@@ -27,7 +27,7 @@ export const devtoService = {
   searchArticles: async (query: string, limit: number = 5): Promise<DevToArticle[]> => {
     try {
       const response = await fetch(
-        `${apiConfig.devto.baseUrl}/articles?per_page=${limit}&tag=${encodeURIComponent(query)}`,
+        `/api/devto/api/articles?per_page=${limit}&tag=${encodeURIComponent(query)}`,
         {
           headers: {
             'api-key': apiConfig.devto.apiKey
@@ -54,7 +54,7 @@ export const devtoService = {
   getArticlesByTag: async (tag: string, limit: number = 5): Promise<DevToArticle[]> => {
     try {
       const response = await fetch(
-        `${apiConfig.devto.baseUrl}/articles?per_page=${limit}&tag=${encodeURIComponent(tag)}`,
+        `/api/devto/api/articles?per_page=${limit}&tag=${encodeURIComponent(tag)}`,
         {
           headers: {
             'api-key': apiConfig.devto.apiKey

@@ -36,8 +36,10 @@ export const gitlabService = {
         console.warn('⚠️ GitLab API key not configured, using unauthenticated requests (lower rate limit)');
       }
 
-      // GitLab search API endpoint
-      const url = `${apiConfig.gitlab.baseUrl}/projects?search=${encodeURIComponent(query)}&per_page=${limit}&order_by=stars&sort=desc`;
+      // GitLab search API endpoint - use simpler keywords for better results
+      // Extract first word/keyword for better matching
+      const keyword = query.split(/\s+/)[0].toLowerCase();
+      const url = `${apiConfig.gitlab.baseUrl}/projects?search=${encodeURIComponent(keyword)}&per_page=${limit}&order_by=last_activity_at`;
       const headers: HeadersInit = {
         'Accept': 'application/json',
       };
@@ -47,7 +49,20 @@ export const gitlabService = {
         headers['PRIVATE-TOKEN'] = apiConfig.gitlab.apiKey;
       }
 
-      const response = await safeFetch(url, { headers }, 'GitLab');
+      const response = await safeFetch(url, { headers }, 'GitLab').catch(async (error) => {
+        // If authentication fails, try without token
+        if (error.status === 401 || error.status === 400) {
+          console.warn('⚠️ GitLab token invalid/expired, falling back to unauthenticated request');
+          try {
+            return await safeFetch(url, { headers: { 'Accept': 'application/json' } }, 'GitLab');
+          } catch (fallbackError: any) {
+            // Log the actual error response
+            console.error('❌ GitLab unauthenticated request also failed:', fallbackError.status, fallbackError.message);
+            throw fallbackError;
+          }
+        }
+        throw error;
+      });
       const data = await response.json();
       
       // Record the request

@@ -1,4 +1,3 @@
-import { apiConfig } from '../../config/apiConfig';
 import { rateLimiter } from '../../utils/rateLimiter';
 import { ApiErrorHandler, safeFetch } from '../../utils/apiErrorHandler';
 
@@ -28,8 +27,8 @@ export const mdnService = {
         throw new Error(`MDN API rate limit exceeded. Please wait ${waitTime} minutes.`);
       }
 
-      // MDN uses a public API endpoint
-      const url = `https://developer.mozilla.org/api/v1/search?q=${encodeURIComponent(query)}&locale=en-US`;
+      // MDN uses a public API endpoint via proxy to avoid CORS
+      const url = `/api/mdn/api/v1/search?q=${encodeURIComponent(query)}&locale=en-US`;
       
       const response = await safeFetch(url, {}, 'MDN');
       const data = await response.json() as MDNSearchResponse;

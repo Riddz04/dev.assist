@@ -250,7 +250,13 @@ const SearchPage: React.FC = () => {
                             <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                               <span className="flex items-center gap-1.5">
                                 <ExternalLink className="h-3.5 w-3.5" />
-                                {new URL(resource.url).hostname.replace('www.', '')}
+                                {(() => {
+                                  try {
+                                    return new URL(resource.url).hostname.replace('www.', '');
+                                  } catch {
+                                    return resource.url.substring(0, 30) + '...';
+                                  }
+                                })()}
                               </span>
                               {(resource as any).stars && (
                                 <span className="flex items-center gap-1.5">

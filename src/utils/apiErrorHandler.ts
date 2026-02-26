@@ -28,7 +28,12 @@ export class ApiErrorHandler {
 
         // Don't retry if it's not a retryable error
         if (!apiError.retryable || attempt === maxRetries) {
-          console.error(`❌ ${apiName} API failed after ${attempt + 1} attempts:`, apiError);
+          console.error(`❌ ${apiName} API failed after ${attempt + 1} attempts:`, {
+            message: apiError.message,
+            status: apiError.status,
+            code: apiError.code,
+            originalError: lastError?.message || 'No details'
+          });
           throw apiError;
         }
 

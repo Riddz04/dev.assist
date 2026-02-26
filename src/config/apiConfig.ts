@@ -36,13 +36,6 @@ export const apiConfig = {
     baseUrl: 'https://api.stackexchange.com/2.3'
   },
   
-  // Google Custom Search API
-  googleSearch: {
-    apiKey: getEnvVar('GOOGLE_SEARCH_API_KEY'),
-    searchEngineId: getEnvVar('GOOGLE_SEARCH_ENGINE_ID'),
-    baseUrl: 'https://www.googleapis.com/customsearch/v1'
-  },
-  
   // Reddit API
   reddit: {
     clientId: getEnvVar('REDDIT_CLIENT_ID'),
