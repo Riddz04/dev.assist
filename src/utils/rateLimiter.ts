@@ -17,6 +17,7 @@ class RateLimiter {
   constructor() {
     // Set default rate limits for different APIs
     this.limits.set('github', { maxRequests: 5000, windowMs: 60 * 60 * 1000 }); // 5000/hour
+    this.limits.set('gitlab', { maxRequests: 2000, windowMs: 60 * 60 * 1000 }); // 2000/hour
     this.limits.set('youtube', { maxRequests: 10000, windowMs: 24 * 60 * 60 * 1000 }); // 10000/day
     this.limits.set('stackoverflow', { maxRequests: 300, windowMs: 24 * 60 * 60 * 1000 }); // 300/day
     this.limits.set('googleSearch', { maxRequests: 100, windowMs: 24 * 60 * 60 * 1000 }); // 100/day

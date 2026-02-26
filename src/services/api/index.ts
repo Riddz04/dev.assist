@@ -1,4 +1,5 @@
 export * from './githubService';
+export * from './gitlabService';
 export * from './youtubeService';
 export * from './stackoverflowService';
 export * from './googleSearchService';

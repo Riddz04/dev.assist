@@ -18,6 +18,12 @@ export const apiConfig = {
     baseUrl: 'https://api.github.com'
   },
   
+  // GitLab API
+  gitlab: {
+    apiKey: getEnvVar('GITLAB_API_KEY'),
+    baseUrl: 'https://gitlab.com/api/v4'
+  },
+  
   // YouTube Data API
   youtube: {
     apiKey: getEnvVar('YOUTUBE_API_KEY'),

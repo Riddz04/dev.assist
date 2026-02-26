@@ -1,5 +1,6 @@
 import { Resource, ResourceType, ResourceStatus } from '../../types';
 import { githubService } from './githubService';
+import { gitlabService } from './gitlabService';
 import { youtubeService } from './youtubeService';
 import { stackoverflowService } from './stackoverflowService';
 import { googleSearchService } from './googleSearchService';
@@ -7,7 +8,6 @@ import { redditService } from './redditService';
 import { devtoService } from './devtoService';
 import { mediumService } from './mediumService';
 import { mdnService } from './mdnService';
-import { codeExampleService } from './codeExampleService';
 import { npmService } from './npmService';
 
 export const resourceService = {
@@ -20,11 +20,11 @@ export const resourceService = {
     try {
       // Run searches independently so one failure doesn't block others
       const [
-        githubResult, youtubeResult, stackoverflowResult, googleResult,
-        redditResult, devtoResult, mediumResult, mdnResult,
-        codeSandboxResult, npmResult
+        githubResult, gitlabResult, youtubeResult, stackoverflowResult, googleResult,
+        redditResult, devtoResult, mediumResult, mdnResult, npmResult
       ] = await Promise.allSettled([
         githubService.searchRepositories(featureName, limit),
+        gitlabService.searchProjects(featureName, limit),
         youtubeService.searchVideos(`${featureName} tutorial`, limit),
         stackoverflowService.searchQuestions(featureName, limit),
         googleSearchService.searchDocumentation(featureName, limit),
@@ -32,12 +32,12 @@ export const resourceService = {
         devtoService.searchArticles(featureName, limit),
         mediumService.searchPosts(featureName, limit),
         mdnService.searchDocumentation(featureName, limit),
-        codeExampleService.searchCodeSandbox(`${featureName} example`, limit),
         npmService.searchPackages(featureName, limit)
       ]);
 
       // Extract successful results with proper typing
       const githubResults = githubResult.status === 'fulfilled' ? githubResult.value : [];
+      const gitlabResults = gitlabResult.status === 'fulfilled' ? gitlabResult.value : [];
       const youtubeResults = youtubeResult.status === 'fulfilled' ? youtubeResult.value : [];
       const stackoverflowResults = stackoverflowResult.status === 'fulfilled' ? stackoverflowResult.value : [];
       const googleResults = googleResult.status === 'fulfilled' ? googleResult.value : [];
@@ -45,12 +45,11 @@ export const resourceService = {
       const devtoResults = devtoResult.status === 'fulfilled' ? devtoResult.value : [];
       const mediumResults = mediumResult.status === 'fulfilled' ? mediumResult.value : [];
       const mdnResults = mdnResult.status === 'fulfilled' ? mdnResult.value : [];
-      const codeSandboxResults = codeSandboxResult.status === 'fulfilled' ? codeSandboxResult.value : [];
       const npmResults = npmResult.status === 'fulfilled' ? npmResult.value : [];
 
       // Log any failures
-      const results = [githubResult, youtubeResult, stackoverflowResult, googleResult, redditResult, devtoResult, mediumResult, mdnResult, codeSandboxResult, npmResult];
-      const serviceNames = ['GitHub', 'YouTube', 'Stack Overflow', 'Google', 'Reddit', 'Dev.to', 'Medium', 'MDN', 'CodeSandbox', 'npm'];
+      const results = [githubResult, gitlabResult, youtubeResult, stackoverflowResult, googleResult, redditResult, devtoResult, mediumResult, mdnResult, npmResult];
+      const serviceNames = ['GitHub', 'GitLab', 'YouTube', 'Stack Overflow', 'Google', 'Reddit', 'Dev.to', 'Medium', 'MDN', 'npm'];
       results.forEach((r, i) => {
         if (r.status === 'rejected') {
           console.warn(`${serviceNames[i]} API failed:`, r.reason?.message || r.reason);
@@ -69,6 +68,7 @@ export const resourceService = {
           stars: repo.stargazers_count,
           language: repo.language
         })),
+        ...gitlabResults.map(project => gitlabService.formatProjectAsResource(project)),
         ...npmResults.map(pkg => npmService.formatPackageAsResource(pkg)),
         ...youtubeResults.map(video => youtubeService.formatVideoAsResource(video)),
         ...stackoverflowResults.map(question => stackoverflowService.formatQuestionAsResource(question)),
@@ -76,8 +76,7 @@ export const resourceService = {
         ...googleResults.map(result => googleSearchService.formatSearchResultAsResource(result)),
         ...redditResults.map(post => redditService.formatPostAsResource(post)),
         ...devtoResults.map(article => devtoService.formatArticleAsResource(article)),
-        ...mediumResults.map(post => mediumService.formatPostAsResource(post)),
-        ...codeSandboxResults.map(project => codeExampleService.formatCodeSandboxAsResource(project))
+        ...mediumResults.map(post => mediumService.formatPostAsResource(post))
       ];
 
       // Deduplicate by URL
@@ -105,19 +104,22 @@ export const resourceService = {
 
       switch (type) {
         case 'repository':
-          // Search both GitHub and npm for packages/repos independently
-          const [repoResult, npmResult] = await Promise.allSettled([
-            githubService.searchRepositories(featureName, Math.ceil(limit / 2)),
-            npmService.searchPackages(featureName, Math.ceil(limit / 2))
+          // Search both GitHub and GitLab for repositories independently
+          const [githubRepoResult, gitlabRepoResult, npmRepoResult] = await Promise.allSettled([
+            githubService.searchRepositories(featureName, Math.ceil(limit / 3)),
+            gitlabService.searchProjects(featureName, Math.ceil(limit / 3)),
+            npmService.searchPackages(featureName, Math.ceil(limit / 3))
           ]);
           
-          const repos = repoResult.status === 'fulfilled' ? repoResult.value : [];
-          const npmPackages = npmResult.status === 'fulfilled' ? npmResult.value : [];
+          const githubRepos = githubRepoResult.status === 'fulfilled' ? githubRepoResult.value : [];
+          const gitlabProjects = gitlabRepoResult.status === 'fulfilled' ? gitlabRepoResult.value : [];
+          const npmPackages = npmRepoResult.status === 'fulfilled' ? npmRepoResult.value : [];
           
-          if (repoResult.status === 'rejected') console.warn('GitHub API failed:', repoResult.reason);
-          if (npmResult.status === 'rejected') console.warn('npm API failed:', npmResult.reason);
+          if (githubRepoResult.status === 'rejected') console.warn('GitHub API failed:', githubRepoResult.reason);
+          if (gitlabRepoResult.status === 'rejected') console.warn('GitLab API failed:', gitlabRepoResult.reason);
+          if (npmRepoResult.status === 'rejected') console.warn('npm API failed:', npmRepoResult.reason);
           
-          const githubResources = repos.map(repo => ({
+          const githubResources = githubRepos.map(repo => ({
             id: repo.id.toString(),
             title: repo.name,
             url: repo.html_url,
@@ -128,9 +130,11 @@ export const resourceService = {
             language: repo.language
           }));
           
+          const gitlabResources = gitlabProjects.map(project => gitlabService.formatProjectAsResource(project));
+          
           const npmResources = npmPackages.map(pkg => npmService.formatPackageAsResource(pkg));
           
-          resources = [...githubResources, ...npmResources];
+          resources = [...githubResources, ...gitlabResources, ...npmResources];
           break;
 
         case 'tutorial':
@@ -167,19 +171,19 @@ export const resourceService = {
           break;
 
         case 'template':
-          // Search GitHub templates and CodeSandbox projects independently
-          const [templateResult, sandboxResult] = await Promise.allSettled([
+          // Search GitHub templates and GitLab projects independently
+          const [githubTemplateResult, gitlabTemplateResult] = await Promise.allSettled([
             githubService.searchRepositories(`${featureName} template`, Math.ceil(limit / 2)),
-            codeExampleService.searchCodeSandbox(`${featureName} starter`, Math.ceil(limit / 2))
+            gitlabService.searchProjects(`${featureName} template`, Math.ceil(limit / 2))
           ]);
           
-          const templates = templateResult.status === 'fulfilled' ? templateResult.value : [];
-          const sandboxes = sandboxResult.status === 'fulfilled' ? sandboxResult.value : [];
+          const githubTemplates = githubTemplateResult.status === 'fulfilled' ? githubTemplateResult.value : [];
+          const gitlabTemplates = gitlabTemplateResult.status === 'fulfilled' ? gitlabTemplateResult.value : [];
           
-          if (templateResult.status === 'rejected') console.warn('GitHub template search failed:', templateResult.reason);
-          if (sandboxResult.status === 'rejected') console.warn('CodeSandbox API failed:', sandboxResult.reason);
+          if (githubTemplateResult.status === 'rejected') console.warn('GitHub template search failed:', githubTemplateResult.reason);
+          if (gitlabTemplateResult.status === 'rejected') console.warn('GitLab template search failed:', gitlabTemplateResult.reason);
           
-          const templateResources = templates.map(repo => ({
+          const templateResources = githubTemplates.map(repo => ({
             id: repo.id.toString(),
             title: repo.name,
             url: repo.html_url,
@@ -190,9 +194,9 @@ export const resourceService = {
             language: repo.language
           }));
           
-          const sandboxResources = sandboxes.map(project => codeExampleService.formatCodeSandboxAsResource(project));
+          const gitlabTemplateResources = gitlabTemplates.map(project => gitlabService.formatProjectAsResource(project));
           
-          resources = [...templateResources, ...sandboxResources];
+          resources = [...templateResources, ...gitlabTemplateResources];
           break;
       }
 
